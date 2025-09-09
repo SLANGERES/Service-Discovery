@@ -20,7 +20,6 @@ func Discovery(c *gin.Context) {
 		})
 		return
 	}
-
 	responseData := make([]models.Service, 0, len(returnData))
 	for _, v := range returnData {
 		responseData = append(responseData, v)

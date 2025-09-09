@@ -9,9 +9,9 @@ import (
 
 // helper function to reset storages before each test
 func resetStorage() {
-	mu.Lock()
-	defer mu.Unlock()
-	storages = make(map[string]models.Service)
+	Mu.Lock()
+	defer Mu.Unlock()
+	Storages = make(map[string]models.Service)
 }
 
 func TestAddIntoStorage(t *testing.T) {
@@ -22,9 +22,9 @@ func TestAddIntoStorage(t *testing.T) {
 
 	key := fmt.Sprintf("%s:%d", service.Name, service.Port)
 
-	mu.RLock()
-	got, exists := storages[key]
-	mu.RUnlock()
+	Mu.RLock()
+	got, exists := Storages[key]
+	Mu.RUnlock()
 
 	if !exists {
 		t.Fatalf("expected service to exist in storage, but it doesn't")
@@ -40,13 +40,13 @@ func TestRemoveFromStorage(t *testing.T) {
 
 	service := models.Service{Name: "removable", Port: 9090, TTl: 30}
 	AddIntoStorage(service)
-	RemoveFromStorage(service)
+	RemoveFromStorage(service.Host)
 
 	key := fmt.Sprintf("%s:%d", service.Name, service.Port)
 
-	mu.RLock()
-	_, exists := storages[key]
-	mu.RUnlock()
+	Mu.RLock()
+	_, exists := Storages[key]
+	Mu.RUnlock()
 
 	if exists {
 		t.Errorf("expected service to be removed, but found in storage")
@@ -109,9 +109,9 @@ func TestUpdateTTL(t *testing.T) {
 
 	key := fmt.Sprintf("%s:%d", svc.Name, svc.Port)
 
-	mu.RLock()
-	updated := storages[key]
-	mu.RUnlock()
+	Mu.RLock()
+	updated := Storages[key]
+	Mu.RUnlock()
 
 	if updated.TTl != 60 {
 		t.Errorf("expected TTL=60, got %d", updated.TTl)

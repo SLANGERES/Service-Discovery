@@ -12,6 +12,6 @@ func RegisterRouter()*gin.Engine{
 	
 	Router.POST("/register",Register.RegisterService)
 	Router.GET("/discover/:service",handler.Discovery)
-	Router.POST("/unregister",Register.UnRegisterRoute)
+	Router.POST("/unregister/:id",Register.UnRegisterRoute)
 	return  Router
 }

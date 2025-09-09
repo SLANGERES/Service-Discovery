@@ -1,8 +1,11 @@
-package handler
+package service
 
-import "github.com/gin-gonic/gin"
+import (
 
-func HearBeat(c *gin.Context){
-	//! make a call to the instance if they are healthyy
-	//update ttl 
+	util "github.com/SLANGERES/Service-Discovery/internal/util/Helper"
+	
+)
+
+func HearBeat(){
+	util.HeartBeat()
 }

@@ -4,55 +4,56 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/SLANGERES/Service-Discovery/internal/models"
 )
 
 var (
-	mu       sync.RWMutex
-	storages map[string]models.Service
+	Mu       sync.RWMutex
+	Storages map[string]models.Service
 )	
 
 func init() {
-	storages = make(map[string]models.Service) // initialize map
+	Storages = make(map[string]models.Service) // initialize map
 }
 
 // AddIntoStorage adds a service to the registry
 func AddIntoStorage(data models.Service) {
 	key := data.Name + fmt.Sprintf(":%d", data.Port)
-	mu.Lock()
-	storages[key] = data
-	mu.Unlock()
-	fmt.Println("Service Added Sucessfully",storages[key],"key ->",key)
+	Mu.Lock()
+	Storages[key] = data
+	Mu.Unlock()
+	fmt.Println("Service Added Sucessfully",Storages[key],"key ->",key)
 }
 
 // RemoveFromStorage removes a service from the registry
-func RemoveFromStorage(data models.Service) {
-	key := data.Name + fmt.Sprintf(":%d", data.Port)
+func RemoveFromStorage(id string) {
+	key := id
 
-	mu.Lock()
-	delete(storages, key)
-	mu.Unlock()
+	Mu.Lock()
+	delete(Storages, key)
+	Mu.Unlock()
 }
 
 // GetAll returns a snapshot of all registered services
 func GetAll() map[string]models.Service {
-	mu.RLock()
-	defer mu.RUnlock()
+	Mu.RLock()
+	defer Mu.RUnlock()
 
 	// return a copy so callers don’t mutate the original map
-	copy := make(map[string]models.Service, len(storages))
-	for k, v := range storages {
+	copy := make(map[string]models.Service, len(Storages))
+	for k, v := range Storages {
 		copy[k] = v
 	}
 	return copy
 }
 func GetServicesByName(name string) map[string]models.Service {
-	mu.RLock()
-	defer mu.RUnlock()
+	Mu.RLock()
+	defer Mu.RUnlock()
 
 	result := make(map[string]models.Service)
-	for k, v := range storages {
+	for k, v := range Storages {
 		// key is "name:port"
 		if strings.HasPrefix(k, name+":") {
 			result[k] = v
@@ -63,11 +64,12 @@ func GetServicesByName(name string) map[string]models.Service {
 func UpdateTTL(data models.Service) {
     key := data.Name + fmt.Sprintf(":%d", data.Port)
 
-    mu.Lock()
-    defer mu.Unlock()
+    Mu.Lock()
+    defer Mu.Unlock()
 
-    if svc, ok := storages[key]; ok {
-        svc.TTl = 60
-        storages[key] = svc
+    if svc, ok := Storages[key]; ok {
+        svc.TTl = 180
+		svc.Expires = time.Now().Add(time.Duration(svc.TTl) * time.Second)
+        Storages[key] = svc
     }
 }

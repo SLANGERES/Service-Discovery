@@ -4,18 +4,16 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	storage "github.com/SLANGERES/Service-Discovery/internal/Storage"
 	models "github.com/SLANGERES/Service-Discovery/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 )
-func validation(service *models.Service)bool{
-	err:=validator.New().Struct(service)
-	if err!=nil{
-		return false
-	}
-	return true
+
+func validation(service *models.Service) bool {
+	return validator.New().Struct(service) == nil
 }
 func RegisterService(c *gin.Context) {
 	var service models.Service
@@ -26,29 +24,35 @@ func RegisterService(c *gin.Context) {
 		return
 	}
 
-	service.TTl = 60
-	ok:=validation(&service);if !ok{
+	service.TTl = 180
+	service.Expires = time.Now().Add(time.Duration(service.TTl) * time.Second)
+	ok := validation(&service)
+	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Validation error",
 		})
 		return
 	}
-	fmt.Print(service.Name,service.Host,service.Port,service.TTl)
+	fmt.Print(service.Name, service.Host, service.Port, service.TTl)
 
 	storage.AddIntoStorage(service)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Service update sucessfully",
+		
 	})
 }
 func UnRegisterRoute(c *gin.Context) {
-	var data models.Service
-	err:=c.BindJSON(&data);if err!=nil{
+	id := c.Param("id")
+	if id == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Unable to parse the request body",
 		})
 		return
 	}
-	storage.RemoveFromStorage(data)
-	slog.String(data.Name, ": Unregisterd sucessfully")
+	storage.RemoveFromStorage(id)
+	c.JSON(http.StatusOK,gin.H{
+		"message":"service is unregistered Sucessfully",
+	})
+	slog.Info(fmt.Sprintf("%s: Unregistered successfully", id))
 }
